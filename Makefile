@@ -17,4 +17,4 @@ process.o: process.c process.h core.h
 		$(CC) -c $(CFLAGS) process.c
 
 clean:
-		rm $(BIN) *.o
+		rm $(BIN) *.o *.gch

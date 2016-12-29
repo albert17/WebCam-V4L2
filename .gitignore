@@ -31,3 +31,7 @@
 # Debug files
 *.dSYM/
 *.su
+
+# VS Code
+.vscode/
+.vscode/c_cpp_properties.json
