@@ -9,7 +9,7 @@
 
  #include "capture.h"
 
-void start_capturing(int fd, enum io_method io, struct buffer *buffers, unsigned int n_buffers) {
+void start_capturing(int fd, enum io_method io, struct buffer *buffers, unsigned int *n_buffers) {
         unsigned int i;
         enum v4l2_buf_type type;
 
@@ -19,7 +19,7 @@ void start_capturing(int fd, enum io_method io, struct buffer *buffers, unsigned
                 break;
 
         case IO_METHOD_MMAP:
-                for (i = 0; i < n_buffers; ++i) {
+                for (i = 0; i < *n_buffers; ++i) {
                         struct v4l2_buffer buf;
 
                         CLEAR(buf);
@@ -36,7 +36,7 @@ void start_capturing(int fd, enum io_method io, struct buffer *buffers, unsigned
                 break;
 
         case IO_METHOD_USERPTR:
-                for (i = 0; i < n_buffers; ++i) {
+                for (i = 0; i < *n_buffers; ++i) {
                         struct v4l2_buffer buf;
 
                         CLEAR(buf);

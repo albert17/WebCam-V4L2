@@ -33,7 +33,7 @@ void close_device(int fd) {
         fd = -1;
 }
 
-void init_device(int fd, char *dev_name, enum io_method io, int height, int width, enum format format, struct buffer *buffers, unsigned int n_buffers) {
+struct buffer* init_device(int fd, char *dev_name, enum io_method io, int height, int width, enum format format, unsigned int *n_buffers) {
         struct v4l2_capability cap;
         struct v4l2_cropcap cropcap;
         struct v4l2_crop crop;
@@ -107,6 +107,13 @@ void init_device(int fd, char *dev_name, enum io_method io, int height, int widt
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fmt.fmt.pix.width       = width;
         fmt.fmt.pix.height      = height;
+        switch (format) {
+                case JPEG:
+                        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+                default:
+                        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+                        break;
+        }
         fmt.fmt.pix.pixelformat = format;
         fmt.fmt.pix.field       = V4L2_FIELD_ANY;
 
@@ -121,22 +128,24 @@ void init_device(int fd, char *dev_name, enum io_method io, int height, int widt
         if (fmt.fmt.pix.sizeimage < min)
                 fmt.fmt.pix.sizeimage = min;
 
+        struct buffer *buffers;
         switch (io) {
         case IO_METHOD_READ:
-                init_read(fmt.fmt.pix.sizeimage, buffers);
+                buffers = init_read(fmt.fmt.pix.sizeimage);
                 break;
 
         case IO_METHOD_MMAP:
-                init_mmap(dev_name, fd, buffers, n_buffers);
+                buffers =  init_mmap(dev_name, fd, n_buffers);
                 break;
 
         case IO_METHOD_USERPTR:
-                init_userp(dev_name, fd, fmt.fmt.pix.sizeimage, buffers, n_buffers);
+                buffers = init_userp(dev_name, fd, fmt.fmt.pix.sizeimage, n_buffers);
                 break;
         }
+        return buffers;
 }
 
-void term_device(enum io_method io, struct buffer *buffers, unsigned int n_buffers) {
+void term_device(enum io_method io, struct buffer *buffers, unsigned int *n_buffers) {
         unsigned int i;
 
         switch (io) {
@@ -145,17 +154,18 @@ void term_device(enum io_method io, struct buffer *buffers, unsigned int n_buffe
                 break;
 
         case IO_METHOD_MMAP:
-                for (i = 0; i < n_buffers; ++i)
-                        if (-1 == munmap(buffers[i].start, buffers[i].length))
+                for (i = 0; i < *n_buffers; ++i){
+                        if (-1 == munmap(buffers[i].start, buffers[i].length)){
                                 errno_exit("munmap");
+                        }
+                }
                 break;
 
         case IO_METHOD_USERPTR:
-                for (i = 0; i < n_buffers; ++i)
+                for (i = 0; i < *n_buffers; ++i)
                         free(buffers[i].start);
                 break;
         }
-
         free(buffers);
 }
         

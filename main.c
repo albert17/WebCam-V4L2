@@ -23,7 +23,7 @@ static void usage(FILE *fp, int argc, char **argv)
                  "");
 }
 
-static const char short_options[] = "d:t:f:h:w:m:c:r:s";
+static const char short_options[] = "d:t:f:h:w:m:n:r:";
 
 static const struct option
 long_options[] = {
@@ -38,17 +38,16 @@ long_options[] = {
         { 0, 0, 0, 0 }
 };
 
-static char *dev_name;
-static enum type type;
-static enum format format;
-static int height;
-static int width;
-static enum io_method io;
-static int frame_count;
-static int fps;
-struct buffer *buffers;
-static unsigned int n_buffers;
-
+char *dev_name;
+enum type type;
+enum format format;
+int height;
+int width;
+enum io_method io;
+int frame_count;
+int fps;
+unsigned int tmp = 0;
+unsigned int *n_buffers = &tmp;
 
 int main(int argc, char *argv[]) {
         for (;;) {
@@ -57,6 +56,9 @@ int main(int argc, char *argv[]) {
 
                 c = getopt_long(argc, argv,
                                 short_options, long_options, &idx);
+
+                if (-1 == c) { break;}
+
                 switch (c) {
                 case 0: /* getopt_long() flag */
                         break;
@@ -136,9 +138,9 @@ int main(int argc, char *argv[]) {
                         exit(EXIT_FAILURE);
                 }
         }
-
         int fd = open_device(dev_name);
-        init_device(fd, dev_name, io, height, width, format, buffers, n_buffers);
+        struct buffer *buffers;
+        buffers = init_device(fd, dev_name, io, height, width, format, n_buffers);
         start_capturing(fd, io, buffers, n_buffers);
         mainloop(fd, frame_count, io, buffers, n_buffers);
         stop_capturing(fd, io);
