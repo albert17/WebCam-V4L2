@@ -33,7 +33,7 @@ void close_device(int fd) {
         fd = -1;
 }
 
-struct buffer* init_device(int fd, char *dev_name, enum io_method io, int height, int width, enum format format, unsigned int *n_buffers) {
+struct buffer* init_device(int fd, char *dev_name, enum io_method io, int width, int height, enum format format, unsigned int *n_buffers) {
         struct v4l2_capability cap;
         struct v4l2_cropcap cropcap;
         struct v4l2_crop crop;
@@ -105,17 +105,17 @@ struct buffer* init_device(int fd, char *dev_name, enum io_method io, int height
         CLEAR(fmt);
 
         fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.width       = width;
-        fmt.fmt.pix.height      = height;
+        fmt.fmt.pix.width = width;
+        fmt.fmt.pix.height = height;
         switch (format) {
                 case JPEG:
                         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+                        break;
                 default:
                         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
                         break;
         }
-        fmt.fmt.pix.pixelformat = format;
-        fmt.fmt.pix.field       = V4L2_FIELD_ANY;
+        fmt.fmt.pix.field = V4L2_FIELD_ANY;
 
         if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
                 errno_exit("VIDIOC_S_FMT");

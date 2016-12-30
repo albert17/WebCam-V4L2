@@ -15,8 +15,8 @@ static void usage(FILE *fp, int argc, char **argv)
                  "-d | --device name   Video device name [ /dev/videoN ]\n"
                  "-t | --type          Capture type [ video | frames ]\n"
                  "-f | --format        Image format [ YUYV | JPEG ] (only applicable for type: frames)\n"
-                 "-h | --height        Image height\n"
                  "-w | --width         Image width\n"
+                 "-h | --height        Image height\n"
                  "-m | --method        Capture method [ mmap | read | userp ]\n"
                  "-n | --number        Number of frames to capture\n"
                  "-r | --fps           Frames per second to capture\n"
@@ -30,8 +30,8 @@ long_options[] = {
         { "device", required_argument, NULL, 'd' },
         { "type", required_argument, NULL, 't' },
         { "format", required_argument, NULL, 'f' },
-        { "height", required_argument, NULL, 'h' },
         { "width", required_argument, NULL, 'w' },
+        { "height", required_argument, NULL, 'h' },
         { "method", required_argument, NULL, 'm' },
         { "num", required_argument, NULL, 'n' },
         { "fps", required_argument, NULL, 'r' },
@@ -80,22 +80,16 @@ int main(int argc, char *argv[]) {
                         break;
                 case 'f':
                         if (strcmp(optarg, "YUYV") == 0) {
-                            type = YUYV;
+                            format = YUYV;
                         } 
 
                         else if (strcmp(optarg, "JPEG") == 0) {
-                            type = JPEG;
+                            format = JPEG;
                         } 
 
                         else {
                             errno_exit(optarg);
                         }
-                        break;
-                case 'h':
-                        errno = 0;
-                        height = strtol(optarg, NULL, 0);
-                        if (errno)
-                                errno_exit(optarg);
                         break;
                 case 'w':
                         errno = 0;
@@ -103,6 +97,13 @@ int main(int argc, char *argv[]) {
                         if (errno)
                                 errno_exit(optarg);
                         break;
+                case 'h':
+                        errno = 0;
+                        height = strtol(optarg, NULL, 0);
+                        if (errno)
+                                errno_exit(optarg);
+                        break;
+
                 case 'm':
                         if (strcmp(optarg, "mmap") == 0) {
                             io = IO_METHOD_MMAP;
@@ -140,9 +141,33 @@ int main(int argc, char *argv[]) {
         }
         int fd = open_device(dev_name);
         struct buffer *buffers;
-        buffers = init_device(fd, dev_name, io, height, width, format, n_buffers);
+        buffers = init_device(fd, dev_name, io, width, height, format, n_buffers);
         start_capturing(fd, io, buffers, n_buffers);
-        mainloop(fd, frame_count, io, buffers, n_buffers);
+        struct stat st;
+
+        if (stat("./result", &st) == -1) {
+                mkdir("./result", 0770);
+        }
+        int vp;
+        char videoname[15];
+        switch (type)
+        {
+        case VIDEO:
+                sprintf(videoname, "result/video.mjpeg");
+                vp=open(videoname, O_CREAT | O_RDWR | O_APPEND, 0666);
+        default:
+                break;
+        }
+        
+        mainloop(fd, frame_count, io, buffers, n_buffers, type, format, vp);
+        switch (type)
+        {
+        case VIDEO:
+                //flush(vp);
+                close(vp);
+        default:
+                break;
+        }
         stop_capturing(fd, io);
         term_device(io, buffers, n_buffers);
         close_device(fd);
