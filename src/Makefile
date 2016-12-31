@@ -1,7 +1,6 @@
 CC = gcc
 CFLAGS = -O3
 BIN = main 
-
 main: core.o method.o device.o capture.o process.o
 		$(CC) $(CFLAGS) -o $(BIN) main.c core.o method.o device.o capture.o process.o
 
