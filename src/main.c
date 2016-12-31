@@ -1,3 +1,9 @@
+/**
+ * @file main.c
+ * @date 30 Dec 2016
+ *
+ * Executes the application with several options
+ */
 
 #include <getopt.h>
 
@@ -7,7 +13,12 @@
 #include "capture.h"
 #include "process.h"
 
-static void usage(FILE *fp, int argc, char **argv)
+/**
+ * Print the instructions
+ *
+ * @param fp file pointer to write the message
+ */
+static void usage(FILE *fp)
 {
         fprintf(fp,
                  "Usage: ./main [options]\n\n"
@@ -23,8 +34,14 @@ static void usage(FILE *fp, int argc, char **argv)
                  "");
 }
 
-static const char short_options[] = "d:t:f:h:w:m:n:r:";
+/**
+ * List of short options
+ */
+static const char short_options[] = "d:t:f:h:w:m:n:";
 
+/**
+ * List of large options
+ */
 static const struct option
 long_options[] = {
         { "device", required_argument, NULL, 'd' },
@@ -34,26 +51,30 @@ long_options[] = {
         { "height", required_argument, NULL, 'h' },
         { "method", required_argument, NULL, 'm' },
         { "num", required_argument, NULL, 'n' },
-        { "fps", required_argument, NULL, 'r' },
         { 0, 0, 0, 0 }
 };
 
-char *dev_name;
-enum type type;
-enum format format;
-int height;
-int width;
-enum io_method io;
-int frame_count;
-int fps;
-unsigned int tmp = 0;
-unsigned int *n_buffers = &tmp;
+char *dev_name; // dev name 
+enum type type; // type of data
+enum format format; // format fo data
+int height; // height of images
+int width; // width of images
+enum io_method io; // method to capture
+int frame_count; // number of frames
+unsigned int tmp = 0; // tmp
+unsigned int *n_buffers = &tmp; // Pointer to number of buffer
 
+/**
+ * Executes de application
+ * @param argc number of params
+ * @param argv pointer to params
+ */
 int main(int argc, char *argv[]) {
         for (;;) {
                 int idx;
                 int c;
 
+                // get options
                 c = getopt_long(argc, argv,
                                 short_options, long_options, &idx);
 
@@ -127,24 +148,23 @@ int main(int argc, char *argv[]) {
                                 errno_exit(optarg);
                         break;
 
-                case 'r':
-                        errno = 0;
-                        fps = strtol(optarg, NULL, 0);
-                        if (errno)
-                                errno_exit(optarg);
-                        break;
-
                 default:
-                        usage(stderr, argc, argv);
+                        usage(stderr);
                         exit(EXIT_FAILURE);
                 }
         }
+        // Open device
         int fd = open_device(dev_name);
         struct buffer *buffers;
+        
+        // Init the devide
         buffers = init_device(fd, dev_name, io, width, height, format, n_buffers);
+        
+        // Init the capturing options
         start_capturing(fd, io, buffers, n_buffers);
+        
+        // Create the result folder
         struct stat st;
-
         if (stat("./result", &st) == -1) {
                 mkdir("./result", 0770);
         }
@@ -159,7 +179,10 @@ int main(int argc, char *argv[]) {
                 break;
         }
         
+        // Capture
         mainloop(fd, frame_count, io, buffers, n_buffers, type, format, vp);
+        
+        // Close video file
         switch (type)
         {
         case VIDEO:
@@ -167,8 +190,15 @@ int main(int argc, char *argv[]) {
         default:
                 break;
         }
+        
+        // Stop capture
         stop_capturing(fd, io);
+        
+        // Term device
         term_device(io, buffers, n_buffers);
+        
+        // Close devie
         close_device(fd);
+        
         return 0;
 }

@@ -1,3 +1,9 @@
+/**
+ * @file device.c
+ * @date 30 Dec 2016
+ *
+ * Immplements device.h
+ */
 
 #include "method.h"
 #include "device.h"

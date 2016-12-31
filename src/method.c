@@ -1,3 +1,9 @@
+/**
+ * @file method.c
+ * @date 30 Dec 2016
+ *
+ * Immplements method.h
+ */
 
 #include "method.h"
 
