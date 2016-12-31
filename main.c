@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
                 c = getopt_long(argc, argv,
                                 short_options, long_options, &idx);
 
-                if (-1 == c) { break;}
+                //if (-1 == c) { break;}
 
                 switch (c) {
                 case 0: /* getopt_long() flag */
