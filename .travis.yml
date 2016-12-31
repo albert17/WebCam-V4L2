@@ -2,4 +2,5 @@
 language: c
 compile: gcc
 script:
-  - make -C ./src
+  - cd ./src
+  - make
