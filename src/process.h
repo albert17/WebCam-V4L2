@@ -20,8 +20,7 @@
  * @param format format of the frame
  * @pram vp descriptor to de video file
  */
-void process_image(const char *p, int size, int frame_number, enum type type, 
-enum format format, int vp);
+void process_image(const char *p, int size, int frame_number);
 
 /**
  * Reads a frame
@@ -36,9 +35,7 @@ enum format format, int vp);
  * @param vp descriptor to de video file
  * @return 0 if a frame has been read properly. 1 in other case
  */
-int read_frame(int fd, struct buffer *buffers, enum io_method io, 
-unsigned int *n_buffers, unsigned int frame_number, enum type type, 
-enum format format, int vp);
+int read_frame(unsigned int frame_number);
 
 /**
  * Loop to read all the frames
@@ -52,7 +49,6 @@ enum format format, int vp);
  * @param format format of the frame
  * @param vp descriptor to de video file
  */
-void mainloop(int fd, int frame_count, enum io_method io, struct buffer *buffers, 
-unsigned int *n_buffers, enum type type, enum format format, int vp);
+void mainloop();
 
 #endif /* PROCESS_H */

@@ -8,7 +8,7 @@
 #include "method.h"
 #include "device.h"
 
-int open_device(char *dev_name) {
+void open_device() {
         struct stat st;
 
         if (-1 == stat(dev_name, &st)) {
@@ -22,24 +22,21 @@ int open_device(char *dev_name) {
                 exit(EXIT_FAILURE);
         }
 
-        int fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
+        fd = open(dev_name, O_RDWR /* required */ | O_NONBLOCK, 0);
 
         if ( fd == -1 ) {
                 fprintf(stderr, "Cannot open '%s': %d, %s\n",
                          dev_name, errno, strerror(errno));
                 exit(EXIT_FAILURE);
         }
-        return fd;
 }
 
-void close_device(int fd) {
+void close_device() {
         if (-1 == close(fd))
                 errno_exit("close");
-
-        fd = -1;
 }
 
-struct buffer* init_device(int fd, char *dev_name, enum io_method io, int width, int height, enum format format, unsigned int *n_buffers) {
+void init_device() {
         struct v4l2_capability cap;
         struct v4l2_cropcap cropcap;
         struct v4l2_crop crop;
@@ -123,35 +120,36 @@ struct buffer* init_device(int fd, char *dev_name, enum io_method io, int width,
         }
         fmt.fmt.pix.field = V4L2_FIELD_ANY;
 
-        if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
+        if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt)) {
                 errno_exit("VIDIOC_S_FMT");
-
+        }
+        
         /* Buggy driver paranoia. */
         min = fmt.fmt.pix.width * 2;
-        if (fmt.fmt.pix.bytesperline < min)
+        if (fmt.fmt.pix.bytesperline < min) {
                 fmt.fmt.pix.bytesperline = min;
+        }
         min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-        if (fmt.fmt.pix.sizeimage < min)
+        if (fmt.fmt.pix.sizeimage < min) {
                 fmt.fmt.pix.sizeimage = min;
+        }
 
-        struct buffer *buffers;
         switch (io) {
         case IO_METHOD_READ:
-                buffers = init_read(fmt.fmt.pix.sizeimage);
+                init_read(fmt.fmt.pix.sizeimage);
                 break;
 
         case IO_METHOD_MMAP:
-                buffers =  init_mmap(dev_name, fd, n_buffers);
+                init_mmap();
                 break;
 
         case IO_METHOD_USERPTR:
-                buffers = init_userp(dev_name, fd, fmt.fmt.pix.sizeimage, n_buffers);
+                init_userp(fmt.fmt.pix.sizeimage);
                 break;
         }
-        return buffers;
 }
 
-void term_device(enum io_method io, struct buffer *buffers, unsigned int *n_buffers) {
+void term_device() {
         unsigned int i;
 
         switch (io) {
@@ -160,7 +158,7 @@ void term_device(enum io_method io, struct buffer *buffers, unsigned int *n_buff
                 break;
 
         case IO_METHOD_MMAP:
-                for (i = 0; i < *n_buffers; ++i){
+                for (i = 0; i < n_buffers; ++i){
                         if (-1 == munmap(buffers[i].start, buffers[i].length)){
                                 errno_exit("munmap");
                         }
@@ -168,10 +166,9 @@ void term_device(enum io_method io, struct buffer *buffers, unsigned int *n_buff
                 break;
 
         case IO_METHOD_USERPTR:
-                for (i = 0; i < *n_buffers; ++i)
+                for (i = 0; i < n_buffers; ++i)
                         free(buffers[i].start);
                 break;
         }
         free(buffers);
 }
-        

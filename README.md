@@ -1,7 +1,6 @@
 # WebCam-V4L2
 WEBCAM-V4L2 is a software which allows to capture images and video from USB cameras using the V4L2 API.
 
-[![Build Status](https://travis-ci.org/albert17/WebCam-V4L2.svg)](https://travis-ci.org/albert17/WebCam-V4L2)
 ## Usage
 ### Compile
 ```sh

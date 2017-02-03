@@ -54,15 +54,17 @@ long_options[] = {
         { 0, 0, 0, 0 }
 };
 
-char *dev_name; // dev name 
-enum type type; // type of data
-enum format format; // format fo data
-int height; // height of images
-int width; // width of images
-enum io_method io; // method to capture
-int frame_count; // number of frames
-unsigned int tmp = 0; // tmp
-unsigned int *n_buffers = &tmp; // Pointer to number of buffer
+char *dev_name = "/dev/video0"; // dev name 
+enum type type = FRAMES; // type of data
+enum format format = JPEG; // format fo data
+int height = 480; // height of images
+int width = 640; // width of images
+int fd = -1; // Device descriptor
+enum io_method io = IO_METHOD_MMAP; // method to capture
+int frame_count = 10; // number of frames
+unsigned int n_buffers = 0; // Pointer to number of buffer
+struct buffer *buffers; // Pointer to buffer
+int vp = -1; // video file pointer
 
 /**
  * Executes de application
@@ -154,51 +156,45 @@ int main(int argc, char *argv[]) {
                 }
         }
         // Open device
-        int fd = open_device(dev_name);
-        struct buffer *buffers;
+        open_device(dev_name);
         
         // Init the devide
-        buffers = init_device(fd, dev_name, io, width, height, format, n_buffers);
+        init_device();
         
         // Init the capturing options
-        start_capturing(fd, io, buffers, n_buffers);
+        start_capturing();
         
-        // Create the result folder
-        struct stat st;
-        if (stat("./result", &st) == -1) {
-                mkdir("./result", 0770);
-        }
-        int vp;
         char videoname[15];
         switch (type)
         {
         case VIDEO:
-                sprintf(videoname, "result/video.mjpeg");
+                sprintf(videoname, "video.mjpeg");
                 vp=open(videoname, O_CREAT | O_RDWR | O_APPEND, 0666);
         default:
                 break;
         }
         
         // Capture
-        mainloop(fd, frame_count, io, buffers, n_buffers, type, format, vp);
+        mainloop(vp);
         
         // Close video file
         switch (type)
         {
         case VIDEO:
                 close(vp);
+                break;
         default:
                 break;
         }
         
         // Stop capture
-        stop_capturing(fd, io);
+        stop_capturing();
         
         // Term device
-        term_device(io, buffers, n_buffers);
+        term_device();
         
         // Close devie
-        close_device(fd);
+        close_device();
         
         return 0;
 }

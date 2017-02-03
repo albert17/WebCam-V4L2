@@ -7,17 +7,18 @@
 
 #include "process.h"
 
-void process_image(const char *p, int size, int frame_number, enum type type, enum format format, int vp) {
+void process_image(const char *p, int size, int frame_number) {
         char filename[15];
+        printf("PROCESS_IMAGE\n");
         switch (type) {
         case VIDEO:
                 write(vp,p,size);
                 break;
         default:
                 if (format == JPEG) {
-                        sprintf(filename, "result/frame-%04d.jpeg", frame_number);
+                        sprintf(filename, "frame-%04d.jpeg", frame_number);
                 } else {
-                        sprintf(filename, "result/frame-%04d.raw", frame_number);
+                        sprintf(filename, "frame-%04d.raw", frame_number);
                 }
                 FILE *fp=fopen(filename,"wb");
                 fwrite(p, size, 1, fp);
@@ -27,9 +28,10 @@ void process_image(const char *p, int size, int frame_number, enum type type, en
         }
 }
 
-int read_frame(int fd, struct buffer *buffers, enum io_method io, unsigned int *n_buffers, unsigned int frame_number, enum type type, enum format format, int vp) {
+int read_frame(unsigned int frame_number) {
         struct v4l2_buffer buf;
         unsigned int i;
+        printf("READ_FRAME\n");
         switch (io) {
         case IO_METHOD_READ:
                 if (-1 == read(fd, buffers[0].start, buffers[0].length)) {
@@ -47,7 +49,7 @@ int read_frame(int fd, struct buffer *buffers, enum io_method io, unsigned int *
                         }
                 }
 
-                process_image(buffers[0].start, buffers[0].length, frame_number, type, format, vp);
+                process_image(buffers[0].start, buffers[0].length, frame_number);
                 break;
 
         case IO_METHOD_MMAP:
@@ -70,8 +72,8 @@ int read_frame(int fd, struct buffer *buffers, enum io_method io, unsigned int *
                                 errno_exit("VIDIOC_DQBUF");
                         }
                 }
-                assert(buf.index < *n_buffers);
-                process_image(buffers[buf.index].start, buf.bytesused, frame_number, type, format, vp);
+                assert(buf.index < n_buffers);
+                process_image(buffers[buf.index].start, buf.bytesused, frame_number);
                 if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
                         errno_exit("VIDIOC_QBUF");
                 break;
@@ -97,15 +99,14 @@ int read_frame(int fd, struct buffer *buffers, enum io_method io, unsigned int *
                         }
                 }
 
-                for (i = 0; i < *n_buffers; ++i)
+                for (i = 0; i < n_buffers; ++i)
                         if (buf.m.userptr == (unsigned long)buffers[i].start
                             && buf.length == buffers[i].length)
                                 break;
 
-                assert(i < *n_buffers);
+                assert(i < n_buffers);
 
-                process_image((void *)buf.m.userptr, buf.bytesused, frame_number, type, format, vp);
-
+                process_image((void *)buf.m.userptr, buf.bytesused, frame_number);
                 if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
                         errno_exit("VIDIOC_QBUF");
                 break;
@@ -114,7 +115,8 @@ int read_frame(int fd, struct buffer *buffers, enum io_method io, unsigned int *
         return 1;
 }
 
-void mainloop(int fd, int frame_count, enum io_method io, struct buffer *buffers, unsigned int *n_buffers, enum type type, enum format format,  int vp) {
+void mainloop() {
+        printf("MAINLOOP\n");
         for(unsigned int count = 0; count < frame_count; count++) {
                 for (;;) {
                         fd_set fds;
@@ -141,7 +143,7 @@ void mainloop(int fd, int frame_count, enum io_method io, struct buffer *buffers
                                 exit(EXIT_FAILURE);
                         }
 
-                        if (read_frame(fd, buffers, io, n_buffers, count, type, format, vp))
+                        if (read_frame(count))
                                 break;
                         /* EAGAIN - continue select loop. */
                 }

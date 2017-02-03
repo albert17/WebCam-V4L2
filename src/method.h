@@ -14,19 +14,13 @@
  * Init the device to capture using read method
  *
  * @param buffer_size size of buffer
- * @return pointer to buffers
  */
-struct buffer* init_read(unsigned int buffer_size);
+void init_read(unsigned int buffer_size);
 
 /**
  * Init the device to capture using mmap method
- *
- * @param dev_name name of dev
- * @param fd dev descriptor
- * @param n_buffers pointer to number of buffers
- * @return pointer to buffers
  */
-struct buffer* init_mmap(char *dev_name, int fd, unsigned int *n_buffers);
+void init_mmap();
 
 /**
  * Init the device to capture using user method
@@ -37,7 +31,6 @@ struct buffer* init_mmap(char *dev_name, int fd, unsigned int *n_buffers);
  * @param n_buffers pointer to number of buffers
  * @return pointer to buffers
  */
-struct buffer* init_userp(char *dev_name, int fd, unsigned int buffer_size, 
-unsigned int *n_buffers);
+void init_userp(unsigned int buffer_size);
 
 #endif /* CORE_H */

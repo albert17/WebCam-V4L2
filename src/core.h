@@ -57,6 +57,21 @@ struct buffer {
         size_t  length; /** Length of the buffer*/
 };
 
+// Define shared structs
+extern char *dev_name; // dev name 
+extern enum type type; // type of data
+extern enum format format; // format fo data
+extern int height; // height of images
+extern int width; // width of images
+extern int fd; // Device descriptor
+extern enum io_method io; // method to capture
+extern int frame_count; // number of frames
+extern unsigned int n_buffers; // Pointer to number of buffer
+extern struct buffer *buffers; // Pointer to buffer
+extern int vp; // video file pointer
+
+
+
 /**
  * Exit the application with an error message
  * 
