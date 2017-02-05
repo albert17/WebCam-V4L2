@@ -1,10 +1,4 @@
-# Variables for Beaglebone
-LINARO = /opt/gcc-linaro-arm-linux-gnueabihf-4.8-2013.06_linux
-CC = $(LINARO)/bin/arm-linux-gnueabihf-gcc
-INC = -I$(LINARO)/arm-linux-gnueabihf/libc/usr/include
-LIBS = -static -L$(LINARO)/arm-linux-gnueabihf/libc/lib/arm-linux-gnueabihf -L$(LINARO)/arm-linux-gnueabihf/libc/usr/lib/arm-linux-gnueabihf
 
-# Variable for Ubuntu
 CFLAGS = -std=c99
 
 #Variable for all

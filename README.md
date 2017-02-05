@@ -3,12 +3,17 @@ WEBCAM-V4L2 is a software which allows to capture images and video from USB came
 
 ## Usage
 ### Compile
+In Beaglbone.
 ```sh
-$ make
+$ ./compile.sh beaglbone
+```
+In Ubuntu.
+```sh
+$ ./compile.sh ubuntu
 ```
 ### Execute
-
 ```
+$ cd src
 $ ./main
 
 Usage: ./main [options]
